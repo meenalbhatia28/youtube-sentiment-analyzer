@@ -1,0 +1,16 @@
+# Python virtual environment
+venv/
+
+# Cache and compiled files
+__pycache__/
+*.pyc
+
+# Jupyter and system files
+.ipynb_checkpoints/
+.DS_Store
+
+# Environment variables
+.env
+
+# Hugging Face transformers cache
+~/.cache/
