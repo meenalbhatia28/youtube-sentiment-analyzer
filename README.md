@@ -27,6 +27,16 @@ Understanding public sentiment can reveal powerful insights — from brand feedb
 - 💬 View top positive/negative comments
 - 📁 Download results as a CSV
 
+## 📸 Feature Previews
+
+### 📊 Sentiment Distribution
+![Sentiment Chart](feature_screanshots/graph.png)
+
+### ☁️ Word Cloud of Positive Comments
+![Word Cloud](feature_screanshots/positive_comment_board.png)
+
+### 💬 Top Positive & Negative Comments
+![Top Comments](feature_screanshots/list_of_comments.png)
 ## 📈 What I Learned / Built
 
 - Developed a fully functional end-to-end machine learning pipeline on real-world data
@@ -74,7 +84,11 @@ Then open http://localhost:8501 in your browser.
 ## Project Structure
 ```bash
 youtube-sentiment-analyzer/
-│
+│── feature_screenshots/
+│   ├── graph.png
+│   ├── list_of_comments.png
+│   ├── positive_comment_board.png
+│   └── sentiment_over_time_ss.png
 ├── .env.example           # Template for your API key
 ├── requirements.txt       # Python dependencies
 ├── data/                  # Output CSVs (ignored from Git)
