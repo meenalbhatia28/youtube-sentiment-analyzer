@@ -1,48 +1,72 @@
 import os
+from dotenv import load_dotenv
+load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), '..', '.env'))
+import re
 import pandas as pd
 from googleapiclient.discovery import build
-from dotenv import load_dotenv
+from transformers import pipeline, AutoTokenizer, AutoModelForSequenceClassification
+from tqdm import tqdm
+from urllib.parse import urlparse, parse_qs
 
-# Load API key from .env
-load_dotenv()
-API_KEY = os.getenv("YOUTUBE_API_KEY")
+# Initialize the sentiment analysis pipeline
+model_name = "cardiffnlp/twitter-roberta-base-sentiment"
+tokenizer = AutoTokenizer.from_pretrained(model_name)
+model = AutoModelForSequenceClassification.from_pretrained(model_name)
+classifier = pipeline("sentiment-analysis", model=model, tokenizer=tokenizer)
 
-def get_comments(video_id, max_comments=100):
-    youtube = build("youtube", "v3", developerKey=API_KEY)
+# Label mapping from model output
+label_map = {
+    "LABEL_0": "NEGATIVE",
+    "LABEL_1": "NEUTRAL",
+    "LABEL_2": "POSITIVE"
+}
+
+def extract_video_id(url):
+    """Extract the video ID from a full YouTube URL."""
+    parsed_url = urlparse(url)
+    query = parse_qs(parsed_url.query)
+    return query.get("v", [None])[0]
+
+def fetch_comments_from_video(video_url, output_csv_path):
+    video_id = extract_video_id(video_url)
+    if not video_id:
+        raise ValueError("Invalid YouTube URL")
+
+    api_key = os.getenv("YOUTUBE_API_KEY")
+    youtube = build("youtube", "v3", developerKey=api_key)
+
     comments = []
-
     next_page_token = None
-    while len(comments) < max_comments:
-        request = youtube.commentThreads().list(
+
+    print("Fetching comments...")
+    while True:
+        response = youtube.commentThreads().list(
             part="snippet",
             videoId=video_id,
-            maxResults=100,
             pageToken=next_page_token,
+            maxResults=100,
             textFormat="plainText"
-        )
-        response = request.execute()
+        ).execute()
 
         for item in response["items"]:
-            snippet = item["snippet"]["topLevelComment"]["snippet"]
+            comment = item["snippet"]["topLevelComment"]["snippet"]
             comments.append({
-                "author": snippet["authorDisplayName"],
-                "text": snippet["textDisplay"],
-                "published_at": snippet["publishedAt"]
+                "author": comment["authorDisplayName"],
+                "text": comment["textDisplay"],
+                "published_at": comment["publishedAt"]
             })
 
-            if len(comments) >= max_comments:
-                break
-
         next_page_token = response.get("nextPageToken")
-        if not next_page_token:
+        if not next_page_token or len(comments) >= 1000:
             break
 
-    return pd.DataFrame(comments)
+    df = pd.DataFrame(comments)
 
-# Run as script
-if __name__ == "__main__":
-    video_url = input("Paste YouTube video URL: ")
-    video_id = video_url.split("v=")[-1].split("&")[0]
-    df = get_comments(video_id)
-    df.to_csv("data/comments.csv", index=False)
-    print("✅ Saved to data/comments.csv")
+    print("Analyzing sentiment...")
+    tqdm.pandas()
+    df["sentiment"] = df["text"].progress_apply(
+        lambda text: label_map[classifier(text, truncation=True, max_length=512)[0]["label"]]
+    )
+
+    df.to_csv(output_csv_path, index=False)
+    print(f"✅ Comments + sentiment saved to {output_csv_path}")
