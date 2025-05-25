@@ -1,9 +1,10 @@
-# Python virtual environment
+# Python virtual environments
 venv/
+yt-sentiment-env/
 
-# Cache and compiled files
+# Python bytecode and cache
 __pycache__/
-*.pyc
+*.py[cod]
 
 # Jupyter and system files
 .ipynb_checkpoints/
@@ -12,5 +13,12 @@ __pycache__/
 # Environment variables
 .env
 
-# Hugging Face transformers cache
+# Hugging Face transformers cache (local user-level cache)
+.cache/
 ~/.cache/
+
+# Streamlit config/cache
+.streamlit/
+
+# App-generated output (CSV data)
+data/
