@@ -83,7 +83,6 @@ youtube-sentiment-analyzer/
     └── fetch_comments.py  # Comment fetching + sentiment logic
 ```
 
-## Author
 ## 👤 Author
 
 **Meenal Bhatia**  
